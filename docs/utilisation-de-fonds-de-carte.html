@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html  lang="french">
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Krigeage avec R</title>
+  <meta name="description" content="Krigeage avec R">
+  <meta name="generator" content="bookdown 0.7 and GitBook 2.6.7">
+
+  <meta property="og:title" content="Krigeage avec R" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Krigeage avec R" />
+  
+  
+  
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  
+  
+<link rel="prev" href="interpolation-et-cartographie-locales.html">
+
+<style type="text/css">
+p.abstract{
+  text-align: center;
+  font-weight: bold;
+}
+div.abstract{
+  margin: auto;
+  width: 90%;
+}
+</style>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="interpolation-et-cartographie-locales.html"><a href="interpolation-et-cartographie-locales.html"><i class="fa fa-check"></i><b>1</b> Interpolation et cartographie locales</a><ul>
+<li class="chapter" data-level="1.1" data-path="interpolation-et-cartographie-locales.html"><a href="interpolation-et-cartographie-locales.html#creation-des-donnees"><i class="fa fa-check"></i><b>1.1</b> Création des données</a></li>
+<li class="chapter" data-level="1.2" data-path="interpolation-et-cartographie-locales.html"><a href="interpolation-et-cartographie-locales.html#cartographie"><i class="fa fa-check"></i><b>1.2</b> Cartographie</a><ul>
+<li class="chapter" data-level="1.2.1" data-path="interpolation-et-cartographie-locales.html"><a href="interpolation-et-cartographie-locales.html#akima"><i class="fa fa-check"></i><b>1.2.1</b> akima</a></li>
+<li class="chapter" data-level="1.2.2" data-path="interpolation-et-cartographie-locales.html"><a href="interpolation-et-cartographie-locales.html#spatial"><i class="fa fa-check"></i><b>1.2.2</b> spatial</a></li>
+<li class="chapter" data-level="1.2.3" data-path="interpolation-et-cartographie-locales.html"><a href="interpolation-et-cartographie-locales.html#gstat"><i class="fa fa-check"></i><b>1.2.3</b> gstat</a></li>
+<li class="chapter" data-level="1.2.4" data-path="interpolation-et-cartographie-locales.html"><a href="interpolation-et-cartographie-locales.html#automap"><i class="fa fa-check"></i><b>1.2.4</b> automap</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="utilisation-de-fonds-de-carte.html"><a href="utilisation-de-fonds-de-carte.html"><i class="fa fa-check"></i><b>2</b> Utilisation de fonds de carte</a><ul>
+<li class="chapter" data-level="2.1" data-path="utilisation-de-fonds-de-carte.html"><a href="utilisation-de-fonds-de-carte.html#obtention-des-cartes"><i class="fa fa-check"></i><b>2.1</b> Obtention des cartes</a></li>
+<li class="chapter" data-level="2.2" data-path="utilisation-de-fonds-de-carte.html"><a href="utilisation-de-fonds-de-carte.html#fabrication-des-donnees"><i class="fa fa-check"></i><b>2.2</b> Fabrication des données</a></li>
+<li class="chapter" data-level="2.3" data-path="utilisation-de-fonds-de-carte.html"><a href="utilisation-de-fonds-de-carte.html#interpolation"><i class="fa fa-check"></i><b>2.3</b> Interpolation</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Krigeage avec R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="utilisation-de-fonds-de-carte" class="section level1">
+<h1><span class="header-section-number">2</span> Utilisation de fonds de carte</h1>
+<p>L’objectif est ici d’interpoler une variable continue du même type sur les centroïdes de polygones d’une carte vectorielle (un shapefile) plutôt que sur une grille.</p>
+<div id="obtention-des-cartes" class="section level2">
+<h2><span class="header-section-number">2.1</span> Obtention des cartes</h2>
+<p>Le package <em>raster</em> permet de télécharger des fonds de carte administratifs, des modèles numériques de terrain, des cartes de climat : voir l’aide de la fonction <code>getData</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;raster&quot;</span>)
+<span class="co"># Récupération du shapefile des limites de régions</span>
+<span class="co"># de France</span>
+France &lt;-<span class="st"> </span>raster<span class="op">::</span><span class="kw">getData</span>(<span class="st">&quot;GADM&quot;</span>, <span class="dt">country =</span> <span class="st">&quot;FRA&quot;</span>, 
+    <span class="dt">level =</span> <span class="dv">3</span>)
+<span class="co"># Projection de France en Lambert 93</span>
+France &lt;-<span class="st"> </span><span class="kw">spTransform</span>(France, <span class="kw">CRS</span>(<span class="st">&quot;+init=epsg:2154&quot;</span>))
+<span class="kw">plot</span>(France)</code></pre></div>
+<p><img src="Krigeage_files/figure-html/unnamed-chunk-1-1.png" width="\maxwidth" /></p>
+</div>
+<div id="fabrication-des-donnees" class="section level2">
+<h2><span class="header-section-number">2.2</span> Fabrication des données</h2>
+<p>Les données sont 100 points placés aléatoirement dans un rectangle contenant la France. Leur marque est une valeur numérique continue, augmentant linéairement de l’ouest vers l’est et avec la distance à la latitude moyenne, et contenant un bruit gaussien.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;spatstat&quot;</span>)
+<span class="co"># Tirage d&#39;un processus de Poisson, 1000 points</span>
+<span class="co"># attendus, dans une fenêtre de 1x1</span>
+<span class="kw">plot</span>(X &lt;-<span class="st"> </span><span class="kw">rpoispp</span>(<span class="dv">100</span>))</code></pre></div>
+<p><img src="Krigeage_files/figure-html/unnamed-chunk-2-1.png" width="\maxwidth" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Valeur de la marque</span>
+X<span class="op">$</span>marks &lt;-<span class="st"> </span>X<span class="op">$</span>x <span class="op">+</span><span class="st"> </span><span class="dv">3</span> <span class="op">*</span><span class="st"> </span><span class="kw">abs</span>(X<span class="op">$</span>y <span class="op">-</span><span class="st"> </span><span class="fl">0.5</span>) <span class="op">+</span><span class="st"> </span><span class="kw">rnorm</span>(X<span class="op">$</span>n, <span class="dt">sd =</span> <span class="fl">0.1</span>)
+<span class="co"># Calage sur Lambert 93 (pas très propre, la</span>
+<span class="co"># fenêtre n&#39;est pas modifiée...)</span>
+X<span class="op">$</span>x &lt;-<span class="st"> </span><span class="fl">8e+05</span> <span class="op">*</span><span class="st"> </span>X<span class="op">$</span>x <span class="op">+</span><span class="st"> </span><span class="fl">3e+05</span>
+X<span class="op">$</span>y &lt;-<span class="st"> </span><span class="fl">9e+05</span> <span class="op">*</span><span class="st"> </span>X<span class="op">$</span>y <span class="op">+</span><span class="st"> </span><span class="dv">6200000</span></code></pre></div>
+</div>
+<div id="interpolation" class="section level2">
+<h2><span class="header-section-number">2.3</span> Interpolation</h2>
+<p>Les valeurs de <span class="math inline">\(x\)</span>, <span class="math inline">\(y\)</span> et <span class="math inline">\(z\)</span> doivent être intégrées dans un objet <em>Spatial</em>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Nécessite un dataframe avec les colonnes x et y</span>
+<span class="co"># plus un dataframe avec la valeur à cartographier</span>
+SpatialX &lt;-<span class="st"> </span><span class="kw">SpatialPointsDataFrame</span>(<span class="dt">coords =</span> <span class="kw">data.frame</span>(<span class="dt">x =</span> X<span class="op">$</span>x, 
+    <span class="dt">y =</span> X<span class="op">$</span>y), <span class="dt">data =</span> <span class="kw">data.frame</span>(<span class="dt">m =</span> X<span class="op">$</span>marks))
+<span class="co"># Le système de projection doit être le même</span>
+<span class="kw">proj4string</span>(SpatialX) &lt;-<span class="st"> </span><span class="kw">proj4string</span>(France)
+<span class="co"># Découpe</span>
+SpatialX &lt;-<span class="st"> </span>SpatialX[France, ]
+<span class="co"># Carte des points</span>
+<span class="kw">spplot</span>(SpatialX, <span class="st">&quot;m&quot;</span>)</code></pre></div>
+<p><img src="Krigeage_files/figure-html/unnamed-chunk-3-1.png" width="\maxwidth" /> L’interpolation est faite avec <em>gstat</em>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;gstat&quot;</span>)
+<span class="co"># Variogramme empirique</span>
+vgmEmpirique &lt;-<span class="st"> </span><span class="kw">variogram</span>(m <span class="op">~</span><span class="st"> </span><span class="dv">1</span>, <span class="dt">data =</span> SpatialX)
+<span class="co"># Ajustement d&#39;un modèle gaussien</span>
+vgmX &lt;-<span class="st"> </span><span class="kw">fit.variogram</span>(vgmEmpirique, <span class="kw">vgm</span>(<span class="st">&quot;Gau&quot;</span>))
+<span class="co"># Objet geostat qui décrit toutes les</span>
+<span class="co"># caractéristiques de la modélisation</span>
+geoX &lt;-<span class="st"> </span><span class="kw">gstat</span>(<span class="dt">formula =</span> m <span class="op">~</span><span class="st"> </span><span class="dv">1</span>, <span class="dt">locations =</span> SpatialX, 
+    <span class="dt">model =</span> vgmX)
+<span class="co"># Calcul de la valeur de m sur les centroides des</span>
+<span class="co"># polygones</span>
+geoXprd &lt;-<span class="st"> </span><span class="kw">predict</span>(geoX, <span class="dt">newdata =</span> France)</code></pre></div>
+<pre><code>## [using ordinary kriging]</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Carte finale</span>
+<span class="kw">spplot</span>(geoXprd, <span class="st">&quot;var1.pred&quot;</span>)</code></pre></div>
+<p><img src="Krigeage_files/figure-html/unnamed-chunk-4-1.png" width="\maxwidth" /></p>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="interpolation-et-cartographie-locales.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"google": false,
+"linkedin": false,
+"weibo": false,
+"instapper": false,
+"vk": false,
+"all": ["facebook", "google", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"download": [["Krigeage.pdf", "PDF"]],
+"toc": {
+"collapse": "subsection"
+},
+"search": false
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "";
+    if (src === "" || src === "true") src = "https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:" && /^https?:/.test(src))
+      src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

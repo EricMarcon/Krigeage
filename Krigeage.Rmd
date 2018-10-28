@@ -1,0 +1,218 @@
+---
+title: "Krigeage avec R"
+author:
+  - name: Eric Marcon
+abstract: >
+  Techniques pour interpoler les valeurs d'une variable continue.
+date: "`r format(Sys.time(), '%d %B %Y')`"
+pdftoc: yes
+preamble: >
+  \usepackage{textcomp}
+  \DeclareUnicodeCharacter{B0}{\textdegree}
+  \hyphenation{bio-di-ver-si-ty sap-lings}
+bibliography: references.bib
+lang: french # english
+output:
+  bookdown::gitbook: 
+    config:
+      download: 
+        - ["Krigeage.pdf", "PDF"]
+  bookdown::word_document2: default
+  bookdown::pdf_book:
+    base_format: EcoFoG::memo
+    keep_tex: TRUE
+---
+
+<!-- Options de knitr et de R (librairies, ...) --> 
+
+```{r Options, echo=FALSE, message=FALSE}
+knitr::opts_chunk$set(cache=TRUE, echo = TRUE, tidy=TRUE, tidy.opts=list(blank=FALSE, width.cutoff=50), out.width='\\maxwidth')
+options(width=50)
+# Installation des packages si nécessaire et chargement
+Library <- function(Packages) {
+  InstallAndLoad <- function(Package) {
+    if (!Package %in% installed.packages()[, 1]) {install.packages(Package, repos="https://cran.rstudio.com/")}
+    require(Package, character.only = TRUE)
+  }
+  invisible(sapply(Packages, InstallAndLoad))
+}
+# Ajouter les packages nécessaires ici
+Library(c("kableExtra", "devtools", "tidyverse", "akima", "spatial", "gstat", "automap", "spatstat"))
+# Package sur GitHub
+devtools::install_github("EricMarcon/SpatDiv")
+```
+
+<!-- Début du document ci-dessous --> 
+
+
+Pour cartographier une variable continue, 4 méthodes sont disponibles, dans les packages _akima_, _spatial_, _gstat_ et _automap_.
+
+
+# Interpolation et cartographie locales
+
+## Création des données
+
+Création d'une communauté de 100 individus de 10 espèces dans une placettes carrée de 1x1.
+
+```{r data, message=FALSE}
+library("SpatDiv")
+plot(rSpCommunity(n=1, size = 100, S=10) -> spCommunity, which.marks = "PointType")
+```
+
+Calcul de la SAC en fonction du nombre de voisins.
+
+```{r SDAC}
+divAccum <- DivAccum(spCommunity, n.seq = 1:10, q.seq=0, Individual=TRUE)
+```
+
+## Cartographie
+
+### akima
+
+La méthode d'Akima est une interpolation entre les valeurs des points, faite dans chaque triangle constitué par les triplets de points les plus proches.
+La valeur des points est conservée.
+L'interpolation se limite au polygone convexe contenant les points.
+
+```{r Akima}
+library("akima")
+Interpole <- with(divAccum, interp(x=SpCommunity$x, y=SpCommunity$y, z=Neighborhoods["0", "10", ], 
+         xo=seq(from=0, to=1, by=.01), yo=seq(from=0, to=1, by=.01)))
+image(Interpole, col=topo.colors(128, alpha = 1), asp=1)
+contour(Interpole, add=TRUE)
+with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
+```
+
+### spatial
+
+La librairie _spatial_ permet krieger, mais renvoie des erreurs si la méthode de calcul de la covariance n'est pas exponentielle.
+L'ordre du polynome du modèle et la distance de dépendance doivent être choisis explicitement.
+
+```{r spatial}
+library("spatial")
+Carte <- with(divAccum, surf.gls(np=3, covmod=expcov, x=SpCommunity$x, y=SpCommunity$y, z=Neighborhoods["0", "10", ], d=.5))
+Krieg <- prmat(Carte, xl=0, xu=1, yl=0, yu=1, n=128)
+image(Krieg, col=topo.colors(128, alpha = 1), asp=1)
+contour(Krieg, add=TRUE)
+with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
+```
+
+### gstat
+
+La librairie _gstat_ étend les possibilités de kriegeage en permettant de spécifier un modèle de tendance pour la variable cartographiée (inutile ici, on utilise `formula=Richness~1`).
+Le variogramme doit être calculé et un modèle ajusté (dans l'exemple, un modèle gaussien et non exponentiel).
+
+```{r gstat}
+library("sp")
+# Création d'un SpatialPointsDataFrame avec les données
+sdfCommunity <- with(divAccum, SpatialPointsDataFrame(coords=data.frame(x=SpCommunity$x, y=SpCommunity$y), data=data.frame(Richness=Neighborhoods["0", "10", ])))
+library("gstat")
+# Variogramme empirique
+vgmEmpirique <- gstat::variogram(Richness~1, data=sdfCommunity)
+# Ajustement d'un modèle gaussien
+vgmX <- fit.variogram(vgmEmpirique, vgm("Gau"))
+# Objet geostat qui décrit toutes les caractéristiques de la modélisation. La formule donne le modèle de tendance
+geoX <- gstat(formula=Richness~1, locations=sdfCommunity, model=vgmX)
+# Préparation d'une grille de 128 points de côté
+xy <- expand.grid((0:128)/128, (0:128)/128)
+names(xy) <- c("x","y")
+gridded(xy) <- ~x+y
+# Calcul de la valeur de Richness sur les points de la grille (kriegeage)
+geoXprd <- predict(geoX, newdata=xy)
+# Carte
+image(geoXprd, col=topo.colors(128, alpha = 1), asp=1)
+contour(geoXprd, add=TRUE)
+with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
+```
+
+
+### automap
+
+La librairie _automap_ s'appuie sur _gstat_ mais automatise toutes les étapes de sélection du modèle de covariance (celui qui s'ajuste le mieux aux données est choisi).
+Le modèle sélectionné est affiché dans le variogramme.
+La grille précédente peut être utilisée, mais une grille calculée à partir de la fenêtre de l'objet _ppp_ (librairie _spatstat_) est plutôt utilisée ici.
+
+
+```{r automap}
+library("spatstat")
+# Préparation d'une grille de 128 points de côté
+xy <- gridcentres(spCommunity, 128, 128)
+# Filtrage des noeuds de la grille à l'intérieur de la fenêtre (inutile ici)
+ok <- inside.owin(xy$x, xy$y, spCommunity)
+# Formatage de la grille
+Grille <- SpatialPoints(cbind(xy$x[ok], xy$y[ok]))
+gridded(Grille) <- TRUE
+# Krigeage du SpatialPointsDataFrame créé à partir des données précédemment
+library("automap")
+AutoKrige <- autoKrige(formula=Richness~1, input_data=sdfCommunity, new_data = Grille)
+# Résultat du krigeage
+plot(AutoKrige)
+# Carte similaire aux précédentes
+image(AutoKrige$krige_output, col=topo.colors(128, alpha = 1), asp=1)
+contour(AutoKrige$krige_output, add=TRUE)
+with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
+```
+
+
+# Utilisation de fonds de carte
+
+L'objectif est ici d'interpoler une variable continue du même type sur les centroïdes de polygones d'une carte vectorielle (un shapefile) plutôt que sur une grille.
+
+## Obtention des cartes
+
+Le package _raster_ permet de télécharger des fonds de carte administratifs, des modèles numériques de terrain, des cartes de climat : voir l'aide de la fonction `getData`.
+
+```{r, message=FALSE}
+library("raster")
+# Récupération du shapefile des limites de régions de France
+France <- raster::getData('GADM', country='FRA', level=3)
+# Projection de France en Lambert 93
+France <- spTransform(France, CRS("+init=epsg:2154"))
+plot(France)
+```
+
+## Fabrication des données
+
+Les données sont 100 points placés aléatoirement dans un rectangle contenant la France.
+Leur marque est une valeur numérique continue, augmentant linéairement de l'ouest vers l'est et avec la distance à la latitude moyenne, et contenant un bruit gaussien.
+
+```{r, message=FALSE, tidy=TRUE}
+library("spatstat")
+# Tirage d'un processus de Poisson, 1000 points attendus, dans une fenêtre de 1x1
+plot(X <- rpoispp(100))
+# Valeur de la marque
+X$marks <- X$x + 3*abs(X$y-0.5) + rnorm(X$n, sd=.1)
+# Calage sur Lambert 93 (pas très propre, la fenêtre n'est pas modifiée...)
+X$x <- 800000 * X$x + 300000
+X$y <- 900000 * X$y + 6200000
+```
+
+## Interpolation
+
+Les valeurs de $x$, $y$ et $z$ doivent être intégrées dans un objet _Spatial_.
+
+```{r}
+# Nécessite un dataframe avec les colonnes x et y plus un dataframe avec la valeur à cartographier
+SpatialX <- SpatialPointsDataFrame(coords=data.frame(x=X$x, y=X$y), data=data.frame(m=X$marks))
+# Le système de projection doit être le même
+proj4string(SpatialX) <- proj4string(France)
+# Découpe
+SpatialX <- SpatialX[France, ]
+# Carte des points
+spplot(SpatialX, "m")
+```
+L'interpolation est faite avec _gstat_.
+
+```{r}
+library("gstat")
+# Variogramme empirique
+vgmEmpirique <- variogram(m~1, data=SpatialX)
+# Ajustement d'un modèle gaussien
+vgmX <- fit.variogram(vgmEmpirique, vgm("Gau"))
+# Objet geostat qui décrit toutes les caractéristiques de la modélisation
+geoX <- gstat(formula=m~1, locations=SpatialX, model=vgmX)
+# Calcul de la valeur de m sur les centroides des polygones
+geoXprd <- predict(geoX, newdata=France)
+# Carte finale
+spplot(geoXprd, "var1.pred")
+```
+

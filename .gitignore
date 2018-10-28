@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+*sp.rds
+/*_cache/
+/*_files/
+/libs/
