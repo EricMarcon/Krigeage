@@ -13,14 +13,14 @@ preamble: >
 bibliography: references.bib
 lang: french # english
 output:
-  bookdown::pdf_book:
-    base_format: EcoFoG::memo
-    keep_tex: TRUE
-  bookdown::word_document2: default
   bookdown::gitbook: 
     config:
       download: 
         - ["Krigeage.pdf", "PDF"]
+  bookdown::word_document2: default
+  bookdown::pdf_book:
+    base_format: EcoFoG::memo
+    keep_tex: TRUE
 ---
 
 <!-- Options de knitr et de R (librairies, ...) --> 
@@ -45,7 +45,18 @@ devtools::install_github("EricMarcon/SpatDiv")
 <!-- Début du document ci-dessous --> 
 
 
-Pour cartographier une variable continue, 4 méthodes sont disponibles, dans les packages _akima_, _spatial_, _gstat_ et _automap_.
+Pour cartographier facilement une variable continue, 4 méthodes sont disponibles, dans les packages _akima_, _spatial_, _gstat_ et _automap_.
+
+Des méthodes plus élaborées ne sont pas traitées ici :
+
+- l'estimation d'un modèle de prédiction de la valeur à partir de variables explicatives (krigeage ordinaire ou krigeage universel). Voir l'aide de la fonction `gstat` pour leur utilisation.
+
+- l'estimation bayesienne de ces modèles ou le co-krigeage (estimation de plusieurs variables non indépendantes). Les packages _RGeostats_ [^1] ou _INLA_ [^2] permettent une modélisation complexe, mais au prix d'un effort bien supérieur.
+
+[^1]: <http://rgeostats.free.fr/>
+
+[^2]: <http://www.r-inla.org/spde-book>
+
 
 
 # Interpolation et cartographie locales
