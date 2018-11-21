@@ -12,15 +12,19 @@ preamble: >
   \hyphenation{bio-di-ver-si-ty sap-lings}
 bibliography: references.bib
 lang: french # english
+always_allow_html: yes
 output:
-  bookdown::gitbook: 
+  bookdown::html_document2:
+    theme: sandstone
+    toc: yes
+    toc_float: yes
+  bookdown::gitbook:
     config:
-      download: 
-        - ["Krigeage.pdf", "PDF"]
+      download: null
   bookdown::word_document2: default
   bookdown::pdf_book:
     base_format: EcoFoG::memo
-    keep_tex: TRUE
+    keep_tex: yes
 ---
 
 <!-- Options de knitr et de R (librairies, ...) --> 
