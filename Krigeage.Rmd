@@ -14,17 +14,17 @@ bibliography: references.bib
 lang: french # english
 always_allow_html: yes
 output:
-  bookdown::html_document2:
-    theme: sandstone
-    toc: yes
-    toc_float: yes
+  bookdown::pdf_book:
+    base_format: EcoFoG::memo
+    keep_tex: yes
   bookdown::gitbook:
     config:
       download: null
   bookdown::word_document2: default
-  bookdown::pdf_book:
-    base_format: EcoFoG::memo
-    keep_tex: yes
+  bookdown::html_document2:
+    theme: sandstone
+    toc: yes
+    toc_float: yes
 ---
 
 <!-- Options de knitr et de R (librairies, ...) --> 
@@ -41,7 +41,7 @@ Library <- function(Packages) {
   invisible(sapply(Packages, InstallAndLoad))
 }
 # Ajouter les packages nécessaires ici
-Library(c("kableExtra", "devtools", "tidyverse", "akima", "spatial", "gstat", "automap", "spatstat"))
+Library(c("kableExtra", "devtools", "tidyverse", "akima", "spatial", "gstat", "automap", "spatstat", "rgdal"))
 # Package sur GitHub
 devtools::install_github("EricMarcon/SpatDiv")
 ```
@@ -67,6 +67,16 @@ Des méthodes plus élaborées ne sont pas traitées ici :
 
 ## Création des données
 
+Les données représentent le niveau de la biodiversité locale au voisinages des arbres d'une forêt.
+La diversité est calculée avec le package _SpatDiv_ disponible sur GitHub, à installer.
+Le package nécessite une compilation, donc les [Rtools](https://cran.r-project.org/bin/windows/Rtools/) sont nécessaires sous Windows. 
+
+```{r, eval=FALSE}
+# Package sur GitHub
+devtools::install_github("EricMarcon/SpatDiv")
+```
+
+
 Création d'une communauté de 100 individus de 10 espèces dans une placettes carrée de 1x1.
 
 ```{r data, message=FALSE}
@@ -74,7 +84,8 @@ library("SpatDiv")
 plot(rSpCommunity(n=1, size = 100, S=10) -> spCommunity, which.marks = "PointType")
 ```
 
-Calcul de la SAC en fonction du nombre de voisins.
+Calcul de la SAC (courbe d'accumulation des espèces) en fonction du nombre de voisins.
+La valeur obtenue est le nombre d'espèces différentes parmi les 10 plus proches voisins de chaque arbre.
 
 ```{r SDAC}
 divAccum <- DivAccum(spCommunity, n.seq = 1:10, q.seq=0, Individual=TRUE)
