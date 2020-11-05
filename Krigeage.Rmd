@@ -42,7 +42,7 @@ Library <- function(Packages) {
   invisible(sapply(Packages, InstallAndLoad))
 }
 # Ajouter les packages nécessaires ici
-Library(c("kableExtra", "devtools", "tidyverse", "akima", "spatial", "gstat", "automap", "spatstat", "rgdal"))
+Library(c("kableExtra", "devtools", "tidyverse", "akima", "spatial", "gstat", "automap", "spatstat", "rgdal", "raster"))
 # Package sur GitHub
 devtools::install_github("EricMarcon/SpatDiv")
 ```

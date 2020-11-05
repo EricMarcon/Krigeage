@@ -15,6 +15,7 @@ Imports:
   formatR,
   gstat, 
   kableExtra,
+  raster,
   rgdal,
   spatial, 
   spatstat,
