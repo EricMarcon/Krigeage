@@ -11,6 +11,7 @@ Imports:
   akima,
   automap,
   devtools,
+  entropart,
   gstat, 
   kableExtra,
   rgdal,
@@ -19,5 +20,6 @@ Imports:
   spatstat,
   tidyverse
 Remotes:
+    EricMarcon/entropart,
     EricMarcon/SpatDiv
 License: GPL-3
