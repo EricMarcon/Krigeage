@@ -20,6 +20,5 @@ Imports:
   spatstat,
   tidyverse
 Remotes:
-    EricMarcon/entropart,
-    EricMarcon/SpatDiv
+    EricMarcon/entropart
 License: GPL-3
