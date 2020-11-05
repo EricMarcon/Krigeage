@@ -1,0 +1,20 @@
+Package: Krigeage
+Title: Krigeage avec R
+Version: 1.1.0
+Authors@R: c(
+  person("Eric", "Marcon", , "e.marcon@free.fr", c("aut", "cre"))
+  )
+URL: https://github.com/EricMarcon/Krigeage
+Depends:
+  R (>= 3.1.0)
+Imports:
+  akima,
+  automap,
+  devtools,
+  gstat, 
+  kableExtra,
+  rgdal,
+  spatial, 
+  spatstat,
+  tidyverse
+License: GPL-3
