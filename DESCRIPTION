@@ -11,6 +11,7 @@ Imports:
   akima,
   automap,
   devtools,
+  entropart,
   gstat, 
   kableExtra,
   rgdal,
