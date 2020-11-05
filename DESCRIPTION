@@ -12,6 +12,7 @@ Imports:
   automap,
   devtools,
   entropart,
+  formatR,
   gstat, 
   kableExtra,
   rgdal,
