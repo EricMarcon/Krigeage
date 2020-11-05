@@ -18,9 +18,8 @@ r_packages:
     - bookdown
 
 script:
-  - travis_wait 60 Rscript -e "rmarkdown::render("Krigeage.Rmd", "bookdown::html_document2")"
-  - travis_wait 60 Rscript -e "rmarkdown::render("Krigeage.Rmd", "bookdown::pdf_book")"
-  - travis_wait 60 Rscript -e "source("GithubPages.R")"
+  - travis_wait 60 Rscript -e "rmarkdown::render("./Krigeage.Rmd", c("bookdown::html_document2", "bookdown::pdf_book"))"
+  - travis_wait 60 Rscript -e "source("./GithubPages.R")"
 
 deploy:
   provider: pages
