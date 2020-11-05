@@ -3,6 +3,8 @@ os: linux
 dist: xenial
 pandoc_version: 2.7.3
 
+warnings_are_errors: false    # Versions de R pour la construction des packages
+
 cache:
   packages: true
   directories: Krigeage_cache, Krigeage_files, libs
