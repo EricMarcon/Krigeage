@@ -11,11 +11,13 @@ Imports:
   akima,
   automap,
   devtools,
-  entropart,
   gstat, 
   kableExtra,
   rgdal,
   spatial, 
+  SpatDiv,
   spatstat,
   tidyverse
+Remotes:
+    EricMarcon/SpatDiv
 License: GPL-3
