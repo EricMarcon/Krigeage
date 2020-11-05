@@ -5,6 +5,9 @@
 # Session Data files
 .RData
 
+# Package file
+.Rbuildignore
+
 # RStudio files
 .Rproj.user/
 
