@@ -7,8 +7,25 @@ warnings_are_errors: false    # Versions de R pour la construction des packages
 
 cache:
   packages: true
-  directories: Krigeage_cache, Krigeage_files, libs
-  
+  directories: 
+    - $HOME/.npm
+    - Krigeage_cache
+    - Krigeage_files
+    - libs
+
+branches:
+  only:
+    - master
+
+addons:
+  apt:
+    packages:
+      - libudunits2-dev # units, sf
+      - libgdal-dev     # sf
+      - libgeos-dev     # sf
+      - libglpk-dev     # igraph
+      - libproj-dev     # sf
+
 # Packages binaires à partir de RStudio
 before_install:
   - echo "options(repos = c(CRAN = 'https://packagemanager.rstudio.com/all/__linux__/xenial/latest'))" >> ~/.Rprofile.site
