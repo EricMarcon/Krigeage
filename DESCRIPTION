@@ -22,6 +22,6 @@ Imports:
   spatstat,
   tidyverse
 Remotes:
-  EricMarcon/EcoFoG,
+  EcoFoG/EcoFoG,
   EricMarcon/entropart
 License: GPL-3
