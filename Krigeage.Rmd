@@ -192,6 +192,9 @@ Le package _raster_ permet de télécharger des fonds de carte administratifs, d
 library("raster")
 # Récupération du shapefile des limites de régions de France
 France <- raster::getData('GADM', country='FRA', level=3)
+# Suppression des avertissements 
+# https://cran.r-project.org/web/packages/rgdal/vignettes/PROJ6_GDAL3.html
+rgdal::set_thin_PROJ6_warnings(FALSE)
 # Projection de France en Lambert 93
 France <- spTransform(France, CRS("+init=epsg:2154"))
 plot(France)
@@ -238,8 +241,11 @@ vgmX <- fit.variogram(vgmEmpirique, vgm("Gau"))
 # Objet geostat qui décrit toutes les caractéristiques de la modélisation
 geoX <- gstat(formula=m~1, locations=SpatialX, model=vgmX)
 # Calcul de la valeur de m sur les centroides des polygones
-geoXprd <- predict(geoX, newdata=France)
+suppressWarnings(geoXprd <- predict(geoX, newdata=France))
 # Carte finale
 spplot(geoXprd, "var1.pred")
 ```
 
+Remarque : le fond de carte `France` du package **raster** utilise un système de projection qui génère des avertissements par `predict()` en raison de l'évoluton du package **rgdal**[^3].
+
+[^3]: https://cran.r-project.org/web/packages/rgdal/vignettes/PROJ6_GDAL3.html
