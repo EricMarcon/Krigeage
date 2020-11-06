@@ -15,12 +15,12 @@ lang: fr-FR # en-US
 babel: french # english
 always_allow_html: yes
 output:
-  bookdown::pdf_book:
-    base_format: EcoFoG::memo
-    keep_tex: yes
   bookdown::gitbook:
     config:
       download: null
+  bookdown::pdf_book:
+    base_format: EcoFoG::memo
+    keep_tex: yes
   bookdown::word_document2: default
   bookdown::html_document2:
     theme: sandstone
@@ -50,13 +50,13 @@ devtools::install_github("EricMarcon/SpatDiv")
 <!-- Début du document ci-dessous --> 
 
 
-Pour cartographier facilement une variable continue, 4 méthodes sont disponibles, dans les packages _akima_, _spatial_, _gstat_ et _automap_.
+Pour cartographier facilement une variable continue, 4 méthodes sont disponibles, dans les packages **akima**, **spatial**, **gstat** et **automap**.
 
 Des méthodes plus élaborées ne sont pas traitées ici :
 
 - l'estimation d'un modèle de prédiction de la valeur à partir de variables explicatives (krigeage ordinaire ou krigeage universel). Voir l'aide de la fonction `gstat` pour leur utilisation.
 
-- l'estimation bayesienne de ces modèles ou le co-krigeage (estimation de plusieurs variables non indépendantes). Les packages _RGeostats_ [^1] ou _INLA_ [^2] permettent une modélisation complexe, mais au prix d'un effort bien supérieur.
+- l'estimation bayesienne de ces modèles ou le co-krigeage (estimation de plusieurs variables non indépendantes). Les packages **RGeostats** [^1] ou **INLA** [^2] permettent une modélisation complexe, mais au prix d'un effort bien supérieur.
 
 [^1]: <http://rgeostats.free.fr/>
 
@@ -69,7 +69,7 @@ Des méthodes plus élaborées ne sont pas traitées ici :
 ## Création des données
 
 Les données représentent le niveau de la biodiversité locale au voisinages des arbres d'une forêt.
-La diversité est calculée avec le package _SpatDiv_ disponible sur GitHub, à installer.
+La diversité est calculée avec le package **SpatDiv** disponible sur GitHub, à installer.
 Le package nécessite une compilation, donc les [Rtools](https://cran.r-project.org/bin/windows/Rtools/) sont nécessaires sous Windows. 
 
 ```{r, eval=FALSE}
@@ -111,7 +111,7 @@ with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
 
 ### spatial
 
-La librairie _spatial_ permet krieger, mais renvoie des erreurs si la méthode de calcul de la covariance n'est pas exponentielle.
+Le package **spatial** permet krieger, mais renvoie des erreurs si la méthode de calcul de la covariance n'est pas exponentielle.
 L'ordre du polynome du modèle et la distance de dépendance doivent être choisis explicitement.
 
 ```{r spatial}
@@ -125,7 +125,7 @@ with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
 
 ### gstat
 
-La librairie _gstat_ étend les possibilités de kriegeage en permettant de spécifier un modèle de tendance pour la variable cartographiée (inutile ici, on utilise `formula=Richness~1`).
+Le package **gstat** étend les possibilités de kriegeage en permettant de spécifier un modèle de tendance pour la variable cartographiée (inutile ici, on utilise `formula=Richness~1`).
 Le variogramme doit être calculé et un modèle ajusté (dans l'exemple, un modèle gaussien et non exponentiel).
 
 ```{r gstat}
@@ -154,9 +154,9 @@ with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
 
 ### automap
 
-La librairie _automap_ s'appuie sur _gstat_ mais automatise toutes les étapes de sélection du modèle de covariance (celui qui s'ajuste le mieux aux données est choisi).
+Le package **automap** s'appuie sur **gstat** mais automatise toutes les étapes de sélection du modèle de covariance (celui qui s'ajuste le mieux aux données est choisi).
 Le modèle sélectionné est affiché dans le variogramme.
-La grille précédente peut être utilisée, mais une grille calculée à partir de la fenêtre de l'objet _ppp_ (librairie _spatstat_) est plutôt utilisée ici.
+La grille précédente peut être utilisée, mais une grille calculée à partir de la fenêtre de l'objet ``ppp` (librairie **spatstat**) est plutôt utilisée ici.
 
 
 ```{r automap}
@@ -243,9 +243,10 @@ geoX <- gstat(formula=m~1, locations=SpatialX, model=vgmX)
 # Calcul de la valeur de m sur les centroides des polygones
 suppressWarnings(geoXprd <- predict(geoX, newdata=France))
 # Carte finale
-spplot(geoXprd, "var1.pred")
+suppressWarnings(spplot(geoXprd, "var1.pred"))
 ```
 
-Remarque : le fond de carte `France` du package **raster** utilise un système de projection qui génère des avertissements par `predict()` en raison de l'évoluton du package **rgdal**[^3].
+Remarque : le fond de carte `France` du package **raster** utilise un système de projection qui génère des avertissements par `predict()` en raison de l'évolution du package **rgdal**[^3].
+L'affichage des avertissements sera rétabli quand les fonds de carte de **raster** auront été mis à jour.
 
 [^3]: https://cran.r-project.org/web/packages/rgdal/vignettes/PROJ6_GDAL3.html
