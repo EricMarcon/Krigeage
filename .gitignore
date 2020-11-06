@@ -49,3 +49,7 @@
 
 # Spécifique
 /*.rds
+
+# Travis
+docs/
+
