@@ -232,7 +232,7 @@ spplot(SpatialX, "m")
 ```
 L'interpolation est faite avec _gstat_.
 
-```{r}
+```{r, warning=FALSE}
 library("gstat")
 # Variogramme empirique
 vgmEmpirique <- variogram(m~1, data=SpatialX)
@@ -241,9 +241,9 @@ vgmX <- fit.variogram(vgmEmpirique, vgm("Gau"))
 # Objet geostat qui décrit toutes les caractéristiques de la modélisation
 geoX <- gstat(formula=m~1, locations=SpatialX, model=vgmX)
 # Calcul de la valeur de m sur les centroides des polygones
-suppressWarnings(geoXprd <- predict(geoX, newdata=France))
+geoXprd <- predict(geoX, newdata=France)
 # Carte finale
-suppressWarnings(spplot(geoXprd, "var1.pred"))
+spplot(geoXprd, "var1.pred")
 ```
 
 Remarque : le fond de carte `France` du package **raster** utilise un système de projection qui génère des avertissements par `predict()` en raison de l'évolution du package **rgdal**[^3].
