@@ -15,13 +15,13 @@ lang: fr-FR # en-US
 babel: french # english
 always_allow_html: yes
 output:
+  bookdown::pdf_book:
+    base_format: EcoFoG::memo
+    keep_tex: yes
   bookdown::html_document2:
     theme: sandstone
     toc: yes
     toc_float: yes
-  bookdown::pdf_book:
-    base_format: EcoFoG::memo
-    keep_tex: yes
 ---
 
 <!-- Options de knitr et de R (librairies, ...) --> 
@@ -34,6 +34,8 @@ knitr::opts_chunk$set(
   dev = "ragg_png",
   out.width='\\maxwidth')
 options(width=50)
+# Crop margins
+knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
 # Installation des packages si nécessaire et chargement
 Library <- function(Packages) {
   InstallAndLoad <- function(Package) {
