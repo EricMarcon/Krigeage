@@ -1,6 +1,6 @@
 language: r
 os: linux
-dist: xenial
+dist: focal
 pandoc_version: 2.7.3
 
 warnings_are_errors: false    # Versions de R pour la construction des packages
@@ -35,7 +35,7 @@ r_packages:
     - bookdown
 
 script:
-  - Rscript -e "rmarkdown::render('Krigeage.Rmd', 'all)"
+  - Rscript -e "rmarkdown::render('Krigeage.Rmd', 'all')"
   - Rscript -e "source('GithubPages.R')"
 
 before_deploy:
