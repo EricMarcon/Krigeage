@@ -15,17 +15,13 @@ lang: fr-FR # en-US
 babel: french # english
 always_allow_html: yes
 output:
-  bookdown::gitbook:
-    config:
-      download: null
-  bookdown::pdf_book:
-    base_format: EcoFoG::memo
-    keep_tex: yes
-  bookdown::word_document2: default
   bookdown::html_document2:
     theme: sandstone
     toc: yes
     toc_float: yes
+  bookdown::pdf_book:
+    base_format: EcoFoG::memo
+    keep_tex: yes
 ---
 
 <!-- Options de knitr et de R (librairies, ...) --> 

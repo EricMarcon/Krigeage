@@ -29,26 +29,23 @@ addons:
 # Packages binaires à partir de RStudio
 before_install:
   - echo "options(repos = c(CRAN = 'https://packagemanager.rstudio.com/all/__linux__/xenial/latest'))" >> ~/.Rprofile.site
-  - echo "options(HTTPUserAgent = paste0('R/', getRversion(), ' R (',
-       paste(getRversion(), R.version['platform'], R.version['arch'], R.version['os']),
-       ')'))" >> ~/.Rprofile.site
+  - echo "options(HTTPUserAgent = paste0('R/', getRversion(), ' R (', paste(getRversion(), R.version['platform'], R.version['arch'], R.version['os']), ')'))" >> ~/.Rprofile.site
 
 r_packages:
     - bookdown
 
 script:
-  - travis_wait 60 Rscript -e "rmarkdown::render('Krigeage.Rmd', c('bookdown::html_document2', 'bookdown::pdf_book'))"
-  - travis_wait 60 Rscript -e "source('GithubPages.R')"
+  - Rscript -e "rmarkdown::render('Krigeage.Rmd', 'all)"
+  - Rscript -e "source('GithubPages.R')"
+
+before_deploy:
+  - "echo theme: jekyll-theme-slate > docs/_config.yml"
 
 deploy:
   provider: pages
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
-  keep_history: true
+  keep_history: false
   local_dir: docs
   on:
     branch: master
-
-notifications:
-  email:
-    on_success: always # default: change
