@@ -194,9 +194,6 @@ Le package _raster_ permet de télécharger des fonds de carte administratifs, d
 library("raster")
 # Récupération du shapefile des limites de régions de France
 France <- raster::getData('GADM', country='FRA', level=3)
-# Suppression des avertissements 
-# https://cran.r-project.org/web/packages/rgdal/vignettes/PROJ6_GDAL3.html
-rgdal::set_thin_PROJ6_warnings(FALSE)
 # Projection de France en Lambert 93
 France <- spTransform(France, CRS("+init=epsg:2154"))
 plot(France)
@@ -224,9 +221,7 @@ Les valeurs de $x$, $y$ et $z$ doivent être intégrées dans un objet _Spatial_
 
 ```{r}
 # Nécessite un dataframe avec les colonnes x et y plus un dataframe avec la valeur à cartographier
-SpatialX <- SpatialPointsDataFrame(coords=data.frame(x=X$x, y=X$y), data=data.frame(m=X$marks))
-# Le système de projection doit être le même
-proj4string(SpatialX) <- proj4string(France)
+SpatialX <- SpatialPointsDataFrame(coords=data.frame(x=X$x, y=X$y), data=data.frame(m=X$marks), proj4string=CRS("+init=epsg:2154"))
 # Découpe
 SpatialX <- SpatialX[France, ]
 # Carte des points
