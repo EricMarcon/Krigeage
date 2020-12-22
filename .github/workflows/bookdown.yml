@@ -20,14 +20,14 @@ jobs:
           brew install pandoc
       - name: Install dependencies
         run: |
-          install.packages(c("remotes", "tinytex"))
+          install.packages(c("remotes", "rmarkdown", "tinytex"))
           tinytex::install_tinytex()
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
-      - name: Render book
+      - name: Render Rmarkdown files
         run: |
           RMD_PATH=($(git diff-tree --no-commit-id --name-only -r HEAD | grep '[.]Rmd$'))
-          Rscript -e 'for (file in commandArgs(TRUE)) rmarkdown::render(file, "all")' ${RMD_PATH[*]}
+          Rscript -e 'for (file in commandArgs(TRUE)) rmarkdown::render(file, "all")' ${RMD_PATH[*]}'
           Rscript -e 'source("GithubPages.R")'
       - name: Upload artifact
         uses: actions/upload-artifact@v1
