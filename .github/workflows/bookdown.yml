@@ -27,6 +27,7 @@ jobs:
           RMD_PATH=($(ls | grep '[.]Rmd$'))
           Rscript -e 'for (file in commandArgs(TRUE)) rmarkdown::render(file, "all")' ${RMD_PATH[*]}
           Rscript -e 'source("GithubPages.R")'
+          echo 'theme: jekyll-theme-slate' > docs/_config.yml
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
