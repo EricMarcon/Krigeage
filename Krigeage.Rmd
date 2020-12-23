@@ -26,7 +26,7 @@ output:
 
 <!-- Options de knitr et de R (librairies, ...) --> 
 
-```{r Options, echo=FALSE, message=FALSE, warning=FALSE}
+```{r Options, include=FALSE}
 knitr::opts_chunk$set(
   cache=TRUE, 
   echo = TRUE, 
