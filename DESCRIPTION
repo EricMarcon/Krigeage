@@ -10,10 +10,7 @@ Depends:
 Imports:
   akima,
   automap,
-  devtools,
-  EcoFoG,
   entropart,
-  formatR,
   gstat, 
   kableExtra,
   ragg,
@@ -22,7 +19,4 @@ Imports:
   spatial, 
   spatstat,
   tidyverse
-Remotes:
-  EcoFoG/EcoFoG,
-  EricMarcon/entropart
 License: GPL-3
