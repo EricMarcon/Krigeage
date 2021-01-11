@@ -1,7 +1,7 @@
 # Krigeage avec R
 
 ![stability-wip](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)
-[![Travis-CI Build Status](https://travis-ci.org/EricMarcon/Krigeage.svg?branch=master)](https://travis-ci.org/EricMarcon/Krigeage)
+![rmarkdown](https://github.com/EricMarcon/Krigeage/workflows/rmarkdown/badge.svg)
 
 Techniques pour interpoler les valeurs d'une variable continue.
 
