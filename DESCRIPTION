@@ -16,7 +16,10 @@ Imports:
   ragg,
   raster,
   rgdal,
+  SpatDiv,
   spatial, 
   spatstat,
   tidyverse
 License: GPL-3
+Remotes:
+  EricMarcon/SpatDiv
