@@ -9,14 +9,14 @@ lang: fr-FR
 pdftoc: yes
 always_allow_html: yes
 output:
+  bookdown::html_document2:
+    toc: yes
+    toc_float: yes
   bookdown::pdf_book:
     template: latex/template.tex
     citation_package: natbib
     latex_engine: xelatex
     keep_tex: yes
-  bookdown::html_document2:
-    toc: yes
-    toc_float: yes
 ---
 
 ```{r DoNotModify, include=FALSE}
@@ -54,7 +54,7 @@ knitr::knit_hooks$set(chunk = function(x, options) {
 ### Customized options for this document
 # Add necessary packages here
 Packages <- c("kableExtra", "remotes", "tidyverse", "ragg",
-          "akima", "spatial", "gstat", "automap", "spatstat", "rgdal", "raster")
+          "akima", "spatial", "gstat", "automap", "spatstat", "rgdal", "raster", "rayshader")
 # Install them
 InstallPackages(Packages)
 
@@ -213,6 +213,38 @@ image(AutoKrige$krige_output, col=topo.colors(128, alpha = 1), asp=1)
 contour(AutoKrige$krige_output, add=TRUE)
 with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
 ```
+
+
+### 3D avec rayshader
+
+Le package [rayshader](https://www.rayshader.com/) fournit un rendu en trois dimensions avec ombres.
+Il peut être utilisé pour afficher la carte précédente en relief.
+
+L'image doit être transformée en matrice.
+```{r, tidy=FALSE}
+library(raster)
+library("rayshader")
+AutoKrige$krige_output %>% 
+  raster %>% 
+  raster_to_matrix ->
+  matrice_carte
+```
+La carte est habillée avec une texture (ici, en noir et blanc) sur laquelle les ombres sont calculées.
+L'affichage 3d ouvre une fenêtre RGL qui peut être manipulée pour changer l'angle de vision. 
+Enfin, `render_snapshot()` capture une image fixe.
+Le paramètre `zscale` est ajusté pour que le relief soit visible.
+
+```{r}
+matrice_carte %>% 
+  sphere_shade(zscale=1E-1, texture = "bw") %>%
+  plot_3d(elmat, zscale=1E-1)
+# Pause pour la création de l'image 3D
+Sys.sleep(0.2)
+# Capture
+render_snapshot(clear=TRUE)
+```
+
+Voir la documentation du package pour un usage avancé.
 
 
 # Utilisation de fonds de carte
