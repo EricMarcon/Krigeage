@@ -117,7 +117,7 @@ Création d'une communauté de 100 individus de 10 espèces dans une placettes c
 
 ```{r data, message=FALSE}
 library("SpatDiv")
-plot(rSpCommunity(n=1, size = 100, S=10) -> spCommunity, which.marks = "PointType")
+autoplot(rSpCommunity(n=1, size = 100, S=10) -> spCommunity)
 ```
 
 Calcul de la SAC (courbe d'accumulation des espèces) en fonction du nombre de voisins.
