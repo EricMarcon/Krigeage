@@ -196,8 +196,8 @@ La grille précédente peut être utilisée, mais une grille calculée à partir
 
 ```{r automap}
 library("spatstat")
-# Préparation d'une grille de 128 points de côté
-xy <- gridcentres(spCommunity, 128, 128)
+# Préparation d'une grille de 256 points de côté
+xy <- gridcentres(spCommunity, 256, 256)
 # Filtrage des noeuds de la grille à l'intérieur de la fenêtre (inutile ici)
 ok <- inside.owin(xy$x, xy$y, spCommunity)
 # Formatage de la grille
@@ -215,7 +215,7 @@ with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
 ```
 
 
-### 3D avec rayshader
+### Rendu 3D avec rayshader
 
 Le package [rayshader](https://www.rayshader.com/) fournit un rendu en trois dimensions avec ombres.
 Il peut être utilisé pour afficher la carte précédente en relief.
@@ -230,18 +230,23 @@ AutoKrige$krige_output %>%
   matrice_carte
 ```
 La carte est habillée avec une texture (ici, en noir et blanc) sur laquelle les ombres sont calculées.
-L'affichage 3d ouvre une fenêtre RGL qui peut être manipulée pour changer l'angle de vision. 
-Enfin, `render_snapshot()` capture une image fixe.
 Le paramètre `zscale` est ajusté pour que le relief soit visible.
 
 ```{r}
 matrice_carte %>% 
+  sphere_shade(zscale=1E-2, texture = "bw") %>%
+  plot_map()
+```
+
+En mode interactif, l'affichage 3d ouvre une fenêtre RGL qui peut être manipulée pour changer l'angle de vision. 
+Enfin, `render_snapshot()` capture une image fixe.
+
+```{r, eval=FALSE}
+matrice_carte %>% 
   sphere_shade(zscale=1E-1, texture = "bw") %>%
-  plot_3d(elmat, zscale=1E-1)
-# Pause pour la création de l'image 3D
-Sys.sleep(0.2)
+  plot_3d(matrice_carte, zscale=1E-1)
 # Capture
-render_snapshot(clear=TRUE)
+render_snapshot()
 ```
 
 Voir la documentation du package pour un usage avancé.
