@@ -67,8 +67,8 @@ knitr::opts_chunk$set(
   warning=FALSE, # Show/Hide warnings
   # Figure alignment and size
   fig.align='center', out.width='80%',
-  # Graphic device
-  dev = "ragg_png",
+  # Graphic devices (ragg_png is better than standard png)
+  dev = c("ragg_png", "pdf"),
   # Code chunk format
   tidy=TRUE, tidy.opts=list(blank=FALSE, width.cutoff=70),
   size="scriptsize", knitr.graphics.auto_pdf = TRUE
@@ -107,7 +107,7 @@ Les données représentent le niveau de la biodiversité locale au voisinages de
 La diversité est calculée avec le package **SpatDiv** disponible sur GitHub, à installer.
 Le package nécessite une compilation, donc les [Rtools](https://cran.r-project.org/bin/windows/Rtools/) sont nécessaires sous Windows. 
 
-```{r, eval=FALSE}
+```{r SpatDiv, eval=FALSE}
 # Package sur GitHub
 devtools::install_github("EricMarcon/SpatDiv")
 ```
@@ -221,7 +221,7 @@ Le package [rayshader](https://www.rayshader.com/) fournit un rendu en trois dim
 Il peut être utilisé pour afficher la carte précédente en relief.
 
 L'image doit être transformée en matrice.
-```{r, tidy=FALSE}
+```{r rayshader1, tidy=FALSE}
 library(raster)
 library("rayshader")
 AutoKrige$krige_output %>% 
@@ -232,7 +232,7 @@ AutoKrige$krige_output %>%
 La carte est habillée avec une texture (ici, en noir et blanc) sur laquelle les ombres sont calculées.
 Le paramètre `zscale` est ajusté pour que le relief soit visible.
 
-```{r}
+```{r rayshader2}
 matrice_carte %>% 
   sphere_shade(zscale=1E-2, texture = "bw") %>%
   plot_map()
@@ -241,7 +241,7 @@ matrice_carte %>%
 En mode interactif, l'affichage 3d ouvre une fenêtre RGL qui peut être manipulée pour changer l'angle de vision. 
 Enfin, `render_snapshot()` capture une image fixe.
 
-```{r, eval=FALSE}
+```{r rayshader3, eval=FALSE}
 matrice_carte %>% 
   sphere_shade(zscale=1E-1, texture = "bw") %>%
   plot_3d(matrice_carte, zscale=1E-1)
@@ -260,7 +260,7 @@ L'objectif est ici d'interpoler une variable continue du même type sur les cent
 
 Le package _raster_ permet de télécharger des fonds de carte administratifs, des modèles numériques de terrain, des cartes de climat : voir l'aide de la fonction `getData`.
 
-```{r, message=FALSE}
+```{r France, message=FALSE}
 library("raster")
 # Récupération du shapefile des limites de régions de France
 France <- raster::getData('GADM', country='FRA', level=3)
@@ -274,7 +274,7 @@ plot(France)
 Les données sont 100 points placés aléatoirement dans un rectangle contenant la France.
 Leur marque est une valeur numérique continue, augmentant linéairement de l'ouest vers l'est et avec la distance à la latitude moyenne, et contenant un bruit gaussien.
 
-```{r, message=FALSE, tidy=TRUE}
+```{r spatstat, message=FALSE, tidy=TRUE}
 library("spatstat")
 # Tirage d'un processus de Poisson, 1000 points attendus, dans une fenêtre de 1x1
 plot(X <- rpoispp(100))
@@ -289,7 +289,7 @@ X$y <- 900000 * X$y + 6200000
 
 Les valeurs de $x$, $y$ et $z$ doivent être intégrées dans un objet _Spatial_.
 
-```{r}
+```{r CartePoints}
 # Nécessite un dataframe avec les colonnes x et y plus un dataframe avec la valeur à cartographier
 SpatialX <- SpatialPointsDataFrame(coords=data.frame(x=X$x, y=X$y), data=data.frame(m=X$marks), proj4string=CRS("+init=epsg:2154"))
 # Découpe
@@ -297,9 +297,10 @@ SpatialX <- SpatialX[France, ]
 # Carte des points
 spplot(SpatialX, "m")
 ```
+
 L'interpolation est faite avec _gstat_.
 
-```{r, warning=FALSE}
+```{r gstatmap, warning=FALSE}
 library("gstat")
 # Variogramme empirique
 vgmEmpirique <- variogram(m~1, data=SpatialX)
