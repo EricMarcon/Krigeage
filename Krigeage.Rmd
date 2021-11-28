@@ -54,7 +54,7 @@ knitr::knit_hooks$set(chunk = function(x, options) {
 ### Customized options for this document
 # Add necessary packages here
 Packages <- c("kableExtra", "remotes", "tidyverse", "ragg",
-          "akima", "spatial", "gstat", "automap", "spatstat", "rgdal", "raster", "rayshader")
+          "akima", "spatial", "gstat", "automap", "spatstat", "rgdal", "raster", "rayshader", "magick")
 # Install them
 InstallPackages(Packages)
 
@@ -225,8 +225,8 @@ L'image doit être transformée en matrice.
 library("raster")
 library("rayshader")
 AutoKrige$krige_output %>% 
-  raster::raster %>% 
-  rayshader::raster_to_matrix ->
+  raster %>% 
+  raster_to_matrix ->
   matrice_carte
 ```
 La carte est habillée avec une texture (ici, en noir et blanc) sur laquelle les ombres sont calculées.
