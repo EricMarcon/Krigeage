@@ -225,8 +225,8 @@ L'image doit être transformée en matrice.
 library("raster")
 library("rayshader")
 AutoKrige$krige_output %>% 
-  raster %>% 
-  raster_to_matrix ->
+  raster::raster() %>% 
+  rayshader::raster_to_matrix() ->
   matrice_carte
 ```
 La carte est habillée avec une texture (ici, en noir et blanc) sur laquelle les ombres sont calculées.
