@@ -16,8 +16,6 @@ jobs:
       - name: Install pandoc
         uses: r-lib/actions/setup-pandoc@v1
       - name: Install dependencies
-        env:
-          GITHUB_PAT: ${{ secrets.GH_PAT }}
         run: |
           options(pkgType = "binary")
           options(install.packages.check.source = "no")
@@ -25,6 +23,8 @@ jobs:
           tinytex::install_tinytex()
         shell: Rscript {0}
       - name: Render Rmarkdown files
+        env:
+          GITHUB_PAT: ${{ secrets.GH_PAT }}
         run: |
           RMD_PATH=($(ls | grep "[.]Rmd$"))
           Rscript -e 'for (file in commandArgs(TRUE)) rmarkdown::render(file, "all")' ${RMD_PATH[*]}
