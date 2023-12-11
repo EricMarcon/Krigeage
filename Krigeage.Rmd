@@ -6,23 +6,25 @@ abstract: >
   Techniques pour interpoler les valeurs d'une variable continue.
 date: "`r format(Sys.time(), '%d %B %Y')`"
 lang: fr-FR
+bibliography: references.bib
 pdftoc: yes
 always_allow_html: yes
 output:
+  bookdown::html_document2:
+    toc: yes
+    toc_float: yes
   bookdown::pdf_book:
     template: latex/template.tex
     citation_package: natbib
     latex_engine: xelatex
     keep_tex: yes
-  bookdown::html_document2:
-    toc: yes
-    toc_float: yes
 ---
 
 ```{r DoNotModify, include=FALSE}
 ### Utilities. Do not modify.
 # Installation of packages if necessary
 InstallPackages <- function(Packages) {
+  
   InstallPackage <- function(Package) {
     if (!Package %in% installed.packages()[, 1]) {
       install.packages(Package, repos="https://cran.rstudio.com/")
@@ -62,36 +64,35 @@ remotes::install_github("EricMarcon/SpatDiv")
 
 # knitr options
 knitr::opts_chunk$set(
-  cache=FALSE, # Cache chunk results
+  cache = FALSE, # Cache chunk results
   echo = TRUE, # Show/Hide R chunks
-  warning=FALSE, # Show/Hide warnings
+  warning = FALSE, # Show/Hide warnings
   # Figure alignment and size
-  fig.align='center', out.width='80%',
+  fig.align = 'center', out.width='80%',
   # Graphic devices (ragg_png is better than standard png)
   dev = c("ragg_png", "pdf"),
   # Code chunk format
-  tidy=TRUE, tidy.opts=list(blank=FALSE, width.cutoff=70),
-  size="scriptsize", knitr.graphics.auto_pdf = TRUE
+  tidy = TRUE, tidy.opts = list(blank = FALSE, width.cutoff = 70),
+  size = "scriptsize", knitr.graphics.auto_pdf = TRUE
   )
-options(width=70)
+options(width = 70)
 
 # ggplot style
 library("tidyverse")
 theme_set(theme_bw())
-theme_update(panel.background=element_rect(fill="transparent", colour=NA),
-             plot.background=element_rect(fill="transparent", colour=NA))
-knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args = list(bg = "transparent"))
 
 # Random seed
 set.seed(973)
 ```
 
-Pour cartographier facilement une variable continue, 4 méthodes sont disponibles, dans les packages **akima**, **spatial**, **gstat** et **automap**.
+Pour cartographier facilement une variable continue, 5 méthodes sont disponibles, dans les packages **akima**, **spatial**, **spatstat**, **gstat** et **automap**.
 
 Des méthodes plus élaborées ne sont pas traitées ici :
 
 - l'estimation d'un modèle de prédiction de la valeur à partir de variables explicatives (krigeage ordinaire ou krigeage universel). Voir l'aide de la fonction `gstat` pour leur utilisation.
-
 - l'estimation bayesienne de ces modèles ou le co-krigeage (estimation de plusieurs variables non indépendantes). Les packages **RGeostats** [^1] ou **INLA** [^2] permettent une modélisation complexe, mais au prix d'un effort bien supérieur.
 
 [^1]: <http://rgeostats.free.fr/>
@@ -103,29 +104,70 @@ Des méthodes plus élaborées ne sont pas traitées ici :
 
 ## Création des données
 
-Les données représentent le niveau de la biodiversité locale au voisinages des arbres d'une forêt.
-La diversité est calculée avec le package **SpatDiv** disponible sur GitHub, à installer.
-Le package nécessite une compilation, donc les [Rtools](https://cran.r-project.org/bin/windows/Rtools/) sont nécessaires sous Windows. 
+Les données représentent le niveau de concentration spatiale locale autour de points [@Marcon2023].
 
-```{r SpatDiv, eval=FALSE}
-# Package sur GitHub
-devtools::install_github("EricMarcon/SpatDiv")
+Un jeu de deux types de points est généré dans une fenêtre carrée.
+Les cas sont générés par un processus de Matérn [@Matern1960] avec $\kappa$ agrégats (attendus) de $\mu$ points (attendus) dans un cercle de rayon *scale*.
+Les contrôles suivent un processus de Poisson dont la densité $\lambda$ décroit exponentiellement vers le haut de la carte.
+
+```{r, message=FALSE}
+library("dplyr")
+library("dbmss")
+# Simulation of cases (clusters)
+rMatClust(kappa = 10, scale = 0.05, mu = 10) %>% 
+  as.wmppp -> 
+  CASES
+CASES$marks$PointType <- "Cases"
+# Number of points
+CASES$n
+
+# Simulation of controls (random distribution)
+rpoispp(function(x, y) {1000 * exp(-2 * y)}) %>% 
+  as.wmppp ->
+  CONTROLS
+CONTROLS$marks$PointType <-"Controls"
+# Number of points
+CONTROLS$n
+
+# Mixed patterns (cases and controls)
+ALL <- superimpose(CASES, CONTROLS)
+autoplot(ALL)
 ```
 
+La valeur de la concentration relative autour de chaque cas à la distance $r=0,1$ est définie comme le rapport entre la proportion de cas observés et la proportion moyenne sur tout le domaine d'étude.
+Si elle est supérieure à 1, on observe plus de voisins qu'attendu.
 
-Création d'une communauté de 100 individus de 10 espèces dans une placettes carrée de 1x1.
+La valeur est calculée en chaque point et stockée dans un objet de type `fv` dont les valeurs sont récupérées pour produire un dataframe.
 
-```{r data, message=FALSE}
-library("SpatDiv")
-autoplot(rSpCommunity(n=1, size = 100, S=10) -> spCommunity)
+```{r}
+# Choose the distance to plot
+Distance <- 0.1
+
+# Calculate the M values to plot
+ALL %>% 
+  Mhat(
+    r = c(0, Distance),
+    ReferenceType = "Cases",
+    NeighborType = "Cases", 
+    Individual = TRUE
+  ) -> 
+  M_TheoEx
+
+# Make a dataframe with x, y and M
+the_df <- data.frame(
+  x = CASES$x, 
+  y = CASES$y, 
+  z = as.numeric(as.data.frame(M_TheoEx)[2, -(1:3)])
+)
 ```
 
-Calcul de la SAC (courbe d'accumulation des espèces) en fonction du nombre de voisins.
-La valeur obtenue est le nombre d'espèces différentes parmi les 10 plus proches voisins de chaque arbre.
+A ce stade, nous disposons d'un tableau contenant les coordonnées et une valeur décrivant chaque point.
 
-```{r SDAC}
-divAccum <- DivAccum(spCommunity, n.seq = 1:10, q.seq=0, Individual=TRUE)
+```{r}
+head(the_df)
 ```
+
+L'objectif est maintenant de cartographier cette valeur.
 
 ## Cartographie
 
@@ -133,57 +175,126 @@ divAccum <- DivAccum(spCommunity, n.seq = 1:10, q.seq=0, Individual=TRUE)
 
 La méthode d'Akima est une interpolation entre les valeurs des points, faite dans chaque triangle constitué par les triplets de points les plus proches.
 La valeur des points est conservée.
-L'interpolation se limite au polygone convexe contenant les points.
 
 ```{r Akima}
 library("akima")
-Interpole <- with(divAccum, interp(x=SpCommunity$x, y=SpCommunity$y, z=Neighborhoods["0", "10", ], 
-         xo=seq(from=0, to=1, by=.01), yo=seq(from=0, to=1, by=.01)))
-image(Interpole, col=topo.colors(128, alpha = 1), asp=1)
-contour(Interpole, add=TRUE)
-with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
+# interp() function
+akima_interp <- interp(
+  # Coordinates
+  x = the_df$x, 
+  y = the_df$y, 
+  # Value
+  z = the_df$z,
+  # Coordinates to interpolate
+  xo = seq(from = 0, to = 1, by = .01), 
+  yo = seq(from = 0, to = 1, by = .01)
+)
+# Map
+image(akima_interp, col = topo.colors(128, alpha = 1), asp = 1)
+# Contour lines
+contour(akima_interp, add = TRUE)
+# Add the points
+with(the_df, points(x, y, pch = 20))
 ```
+
+L'interpolation se limite au polygone convexe contenant les points.
+
+### spatstat
+
+La fonction `Smooth.ppp()` du package **spatstat** permet d'obtenir le même résultat mais ne se limite pas au polygone contenant les points.
+
+Elle s'applique à un objet de type `ppp` (*planar point pattern*) à créer.
+
+```{r, message=FALSE}
+library("spatstat")
+the_df %>% 
+  # Create a ppp in a square window
+  as.ppp(W = square(1)) %>% 
+  # Smooth it. The bandwidth is computed by bw.scott()
+  Smooth(sigma = bw.scott(.)) ->
+  spatstat_interp
+
+# Plot the result
+plot(spatstat_interp, main = "")
+# Contour lines
+contour(spatstat_interp, add = TRUE)
+# Add the points
+with(the_df, points(x, y, pch = 20))
+```
+
+Le choix de la largeur de bande est capital. 
+La règle de Scott, implémentée dans `bw.scott()` est généralement efficace.
+
 
 ### spatial
 
-Le package **spatial** permet krieger, mais renvoie des erreurs si la méthode de calcul de la covariance n'est pas exponentielle.
-L'ordre du polynome du modèle et la distance de dépendance doivent être choisis explicitement.
+Le package **spatial** permet de kriger au lieu de simplement interpoler, mais renvoie des erreurs si la méthode de calcul de la covariance n'est pas exponentielle.
+L'ordre du polynôme du modèle et la distance de dépendance doivent être choisis explicitement.
 
 ```{r spatial}
 library("spatial")
-Carte <- with(divAccum, surf.gls(np=3, covmod=expcov, x=SpCommunity$x, y=SpCommunity$y, z=Neighborhoods["0", "10", ], d=.5))
-Krieg <- prmat(Carte, xl=0, xu=1, yl=0, yu=1, n=128)
-image(Krieg, col=topo.colors(128, alpha = 1), asp=1)
-contour(Krieg, add=TRUE)
-with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
+# Function surf.gls() creates a trend surface object
+surf.gls(
+  np = 3, 
+  covmod = expcov,
+  x = the_df$x, 
+  y = the_df$y, 
+  z = the_df$z, 
+  d = .5
+) %>% 
+  # prmat() performs kriging over a grid
+  prmat(xl= 0, xu = 1, yl = 0, yu = 1, n = 128) ->
+  spatial_krig
+
+# Map it
+image(spatial_krig, col = topo.colors(128, alpha = 1), asp = 1)
+# Contour lines
+contour(spatial_krig, add = TRUE)
+# Add the points
+with(the_df, points(x, y, pch = 20))
 ```
 
 ### gstat
 
-Le package **gstat** étend les possibilités de kriegeage en permettant de spécifier un modèle de tendance pour la variable cartographiée (inutile ici, on utilise `formula=Richness~1`).
+Le package **gstat** étend les possibilités de krigeage en permettant de spécifier un modèle de tendance pour la variable cartographiée (inutile ici, on utilise `formula=Richness~1`).
 Le variogramme doit être calculé et un modèle ajusté (dans l'exemple, un modèle gaussien et non exponentiel).
 
 ```{r gstat}
 library("sp")
-# Création d'un SpatialPointsDataFrame avec les données
-sdfCommunity <- with(divAccum, SpatialPointsDataFrame(coords=data.frame(x=SpCommunity$x, y=SpCommunity$y), data=data.frame(Richness=Neighborhoods["0", "10", ])))
+# Create a SpatialPointsDataFrame with the data
+sp_spdf <- SpatialPointsDataFrame(
+  # Coordinates are x and y
+  coords = the_df[, 1:2],
+  # Data is z
+  data = the_df[3]
+)
 library("gstat")
-# Variogramme empirique
-vgmEmpirique <- gstat::variogram(Richness~1, data=sdfCommunity)
-# Ajustement d'un modèle gaussien
-vgmX <- fit.variogram(vgmEmpirique, vgm("Gau"))
-# Objet geostat qui décrit toutes les caractéristiques de la modélisation. La formule donne le modèle de tendance
-geoX <- gstat(formula=Richness~1, locations=sdfCommunity, model=vgmX)
+# Empirical variogram
+gstat::variogram(z ~ 1, data = sp_spdf) %>% 
+  # Fit a Gaussian model
+  fit.variogram(vgm("Gau")) ->
+  gstat_variogram
+
+# Build an oject that describes all features of the model.
+# The formula defines the trend
+geoX <- gstat(
+  formula = z ~ 1, 
+  locations = sp_spdf, 
+  model = gstat_variogram
+)
 # Préparation d'une grille de 128 points de côté
-xy <- expand.grid((0:128)/128, (0:128)/128)
-names(xy) <- c("x","y")
-gridded(xy) <- ~x+y
-# Calcul de la valeur de Richness sur les points de la grille (kriegeage)
-geoXprd <- predict(geoX, newdata=xy)
+xy <- expand.grid((0:128) / 128, (0:128) / 128)
+names(xy) <- c("x", "y")
+gridded(xy) <- ~ x + y
+# Calcul de la valeur de Richness sur les points de la grille (krigeage)
+geoXprd <- predict(geoX, newdata = xy)
+
 # Carte
-image(geoXprd, col=topo.colors(128, alpha = 1), asp=1)
-contour(geoXprd, add=TRUE)
-with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
+image(geoXprd, col = topo.colors(128, alpha = 1), asp=1)
+# Contour lines
+contour(spatial_krig, add = TRUE)
+# Add the points
+with(the_df, points(x, y, pch = 20))
 ```
 
 
@@ -196,22 +307,32 @@ La grille précédente peut être utilisée, mais une grille calculée à partir
 
 ```{r automap}
 library("spatstat")
-# Préparation d'une grille de 256 points de côté
-xy <- gridcentres(spCommunity, 256, 256)
-# Filtrage des noeuds de la grille à l'intérieur de la fenêtre (inutile ici)
-ok <- inside.owin(xy$x, xy$y, spCommunity)
-# Formatage de la grille
-Grille <- SpatialPoints(cbind(xy$x[ok], xy$y[ok]))
-gridded(Grille) <- TRUE
-# Krigeage du SpatialPointsDataFrame créé à partir des données précédemment
+# Build a ppp object
+the_df %>% 
+  # Create a ppp in a square window
+  as.ppp(W = square(1)) ->
+  the_ppp
+# Preparing a 256-square-point grid
+xy <- gridcentres(the_ppp, 256, 256)
+# Filtering of grid nodes inside the window (not necessary here)
+ok <- inside.owin(xy$x, xy$y, the_ppp)
+# Formatting the grid
+sp_grid <- SpatialPoints(cbind(xy$x[ok], xy$y[ok]))
+gridded(sp_grid) <- TRUE
+# Kriging the SpatialPointsDataFrame
 library("automap")
-AutoKrige <- autoKrige(formula=Richness~1, input_data=sdfCommunity, new_data = Grille)
-# Résultat du krigeage
-plot(AutoKrige)
-# Carte similaire aux précédentes
-image(AutoKrige$krige_output, col=topo.colors(128, alpha = 1), asp=1)
-contour(AutoKrige$krige_output, add=TRUE)
-with(divAccum, points(x=SpCommunity$x, y=SpCommunity$y, pch = 20))
+automap_krig <- autoKrige(
+  formula = z ~ 1, 
+  input_data = sp_spdf, 
+  new_data = sp_grid
+)
+# Result
+plot(automap_krig)
+
+# The usual map
+image(automap_krig$krige_output, col = topo.colors(128, alpha = 1), asp = 1)
+contour(automap_krig$krige_output, add=TRUE)
+with(the_df, points(x, y, pch = 20))
 ```
 
 
@@ -225,9 +346,9 @@ Le package _raster_ permet de télécharger des fonds de carte administratifs, d
 
 ```{r France, message=FALSE}
 library("raster")
-# Récupération du shapefile des limites de régions de France
+# Retrieving the shapefile for the boundaries of France's regions
 France <- raster::getData('GADM', country='FRA', level=3)
-# Projection de France en Lambert 93
+# Projection of France in Lambert 93
 France <- spTransform(France, CRS("+init=epsg:2154"))
 plot(France)
 ```
@@ -239,11 +360,11 @@ Leur marque est une valeur numérique continue, augmentant linéairement de l'ou
 
 ```{r spatstat, message=FALSE, tidy=TRUE}
 library("spatstat")
-# Tirage d'un processus de Poisson, 1000 points attendus, dans une fenêtre de 1x1
-plot(X <- rpoispp(100))
-# Valeur de la marque
-X$marks <- X$x + 3*abs(X$y-0.5) + rnorm(X$n, sd=.1)
-# Calage sur Lambert 93 (pas très propre, la fenêtre n'est pas modifiée...)
+# Draw in a Poisson process, 1000 expected points, in a 1x1 window
+plot(X <- rpoispp(100), main = "")
+# Values of the mark
+X$marks <- X$x + 3 * abs(X$y - 0.5) + rnorm(X$n, sd = .1)
+# Rough projection on the map
 X$x <- 800000 * X$x + 300000
 X$y <- 900000 * X$y + 6200000
 ```
@@ -253,11 +374,15 @@ X$y <- 900000 * X$y + 6200000
 Les valeurs de $x$, $y$ et $z$ doivent être intégrées dans un objet _Spatial_.
 
 ```{r CartePoints}
-# Nécessite un dataframe avec les colonnes x et y plus un dataframe avec la valeur à cartographier
-SpatialX <- SpatialPointsDataFrame(coords=data.frame(x=X$x, y=X$y), data=data.frame(m=X$marks), proj4string=CRS("+init=epsg:2154"))
-# Découpe
+# Make a spatial point dataframe
+SpatialX <- SpatialPointsDataFrame(
+  coords = data.frame(x = X$x, y = X$y),
+  data = data.frame(m = X$marks), 
+  proj4string = CRS("+init=epsg:2154")
+)
+# Trim it
 SpatialX <- SpatialX[France, ]
-# Carte des points
+# Map the points
 spplot(SpatialX, "m")
 ```
 
@@ -265,19 +390,22 @@ L'interpolation est faite avec _gstat_.
 
 ```{r gstatmap, warning=FALSE}
 library("gstat")
-# Variogramme empirique
-vgmEmpirique <- variogram(m~1, data=SpatialX)
-# Ajustement d'un modèle gaussien
-vgmX <- fit.variogram(vgmEmpirique, vgm("Gau"))
-# Objet geostat qui décrit toutes les caractéristiques de la modélisation
-geoX <- gstat(formula=m~1, locations=SpatialX, model=vgmX)
-# Calcul de la valeur de m sur les centroides des polygones
-geoXprd <- predict(geoX, newdata=France)
-# Carte finale
+# Empirical variogram
+gstat::variogram(m ~ 1, data = SpatialX) %>% 
+  # Fit a Gaussian model
+  fit.variogram(vgm("Gau")) ->
+  gstat_variogram
+
+# Build an oject that describes all features of the model.
+geoX <- gstat(
+  formula = m ~ 1, 
+  locations = SpatialX, 
+  model = gstat_variogram
+)
+# Calculating the value of m on the centroids of polygons
+geoXprd <- predict(geoX, newdata = France)
+# Final map
 spplot(geoXprd, "var1.pred")
 ```
 
-Remarque : le fond de carte `France` du package **raster** utilise un système de projection qui génère des avertissements par `predict()` en raison de l'évolution du package **rgdal**[^3].
-L'affichage des avertissements sera rétabli quand les fonds de carte de **raster** auront été mis à jour.
-
-[^3]: https://cran.r-project.org/web/packages/rgdal/vignettes/PROJ6_GDAL3.html
+`r if (!knitr:::is_latex_output()) '# References {-}'`
