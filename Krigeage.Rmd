@@ -7,17 +7,18 @@ abstract: >
 date: "`r format(Sys.time(), '%d %B %Y')`"
 lang: fr-FR
 bibliography: references.bib
+biblio-style: chicago
 pdftoc: yes
 always_allow_html: yes
 output:
-  bookdown::html_document2:
-    toc: yes
-    toc_float: yes
   bookdown::pdf_book:
     template: latex/template.tex
     citation_package: natbib
     latex_engine: xelatex
     keep_tex: yes
+  bookdown::html_document2:
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r DoNotModify, include=FALSE}
