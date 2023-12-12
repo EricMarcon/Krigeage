@@ -11,14 +11,14 @@ biblio-style: chicago
 pdftoc: yes
 always_allow_html: yes
 output:
+  bookdown::html_document2:
+    toc: yes
+    toc_float: yes
   bookdown::pdf_book:
     template: latex/template.tex
     citation_package: natbib
     latex_engine: xelatex
     keep_tex: yes
-  bookdown::html_document2:
-    toc: yes
-    toc_float: yes
 ---
 
 ```{r DoNotModify, include=FALSE}
@@ -65,7 +65,7 @@ knitr::opts_chunk$set(
   # Graphic devices (ragg_png is better than standard png)
   dev = c("ragg_png", "pdf"),
   # Code chunk format
-  tidy = TRUE, tidy.opts = list(blank = FALSE, width.cutoff = 70),
+  tidy = FALSE, tidy.opts = list(blank = FALSE, width.cutoff = 70),
   size = "scriptsize", knitr.graphics.auto_pdf = TRUE
   )
 options(width = 70)
@@ -155,6 +155,7 @@ the_df <- data.frame(
 ```
 
 A ce stade, nous disposons d'un tableau contenant les coordonnées et une valeur décrivant chaque point.
+Seuls les cas sont conservés: les contrôles n'ont servi qu'à calculer la concentration relative.
 
 ```{r}
 head(the_df)
@@ -252,7 +253,7 @@ with(the_df, points(x, y, pch = 20))
 Le package **gstat** étend les possibilités de krigeage en permettant de spécifier un modèle de tendance pour la variable cartographiée (inutile ici, on utilise `formula=Richness~1`).
 Le variogramme doit être calculé et un modèle ajusté (dans l'exemple, un modèle gaussien et non exponentiel).
 
-```{r gstat}
+```{r gstat, message = FALSE}
 library("sp")
 # Create a SpatialPointsDataFrame with the data
 sp_spdf <- SpatialPointsDataFrame(
