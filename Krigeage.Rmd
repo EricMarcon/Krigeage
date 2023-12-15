@@ -50,7 +50,8 @@ knitr::knit_hooks$set(chunk = function(x, options) {
 # Add necessary packages here
 Packages <- c(
   "tidyverse",
-  "akima", "spatstat", "spatial", "gstat", "automap", "rgdal", "raster", "dbmss"
+  "dbmss", "sp", "sf", "geodata", "ggspatial",
+  "akima", "spatstat", "spatial", "gstat", "automap"
 )
 # Install them
 InstallPackages(Packages)
@@ -81,7 +82,10 @@ knitr::opts_chunk$set(dev.args = list(bg = "transparent"))
 set.seed(973)
 ```
 
-Pour cartographier facilement une variable continue, 5 méthodes sont disponibles, dans les packages **akima**, **spatial**, **spatstat**, **gstat** et **automap**.
+Pour cartographier facilement une variable continue, 5 méthodes sont disponibles, dans les packages **akima**, **spatstat**, **spatial**, **gstat** et **automap**.
+Les deux premiers fournissent des méthodes d'interpolation: **spatstat** est le meilleur choix.
+Les trois derniers permettent le krigeage.
+**gstat** donne un contrôle précis sur les méthodes alors que **automap** automatise la procédure pour la rendre accessible aux non-spécialistes.
 
 Des méthodes plus élaborées ne sont pas traitées ici :
 
@@ -104,7 +108,7 @@ Les cas sont générés par un processus de Matérn [@Matern1960] avec $\kappa$ 
 Les contrôles suivent un processus de Poisson dont la densité $\lambda$ décroit exponentiellement vers le haut de la carte.
 
 ```{r, message=FALSE}
-library("dplyr")
+library("tidyverse")
 library("dbmss")
 # Simulation of cases (clusters)
 rMatClust(kappa = 10, scale = 0.05, mu = 10) %>% 
@@ -157,11 +161,24 @@ the_df <- data.frame(
 A ce stade, nous disposons d'un tableau contenant les coordonnées et une valeur décrivant chaque point.
 Seuls les cas sont conservés: les contrôles n'ont servi qu'à calculer la concentration relative.
 
+Ce format de données est aussi générique que possible.
+
 ```{r}
 head(the_df)
 ```
 
-L'objectif est maintenant de cartographier cette valeur.
+L'objectif est maintenant de cartographier la  valeur $z$.
+La cartographie des points est très simple avec **sf**.
+
+```{r}
+library("sf")
+the_df %>% 
+  st_as_sf(coords = c("x", "y")) %>% 
+  plot(graticule = TRUE, axes = TRUE, main="")
+```
+
+La sections suivante présente les méthodes nécessaire à la cartographie de la valeur interpolée ou krigée de $z$.
+
 
 ## Cartographie
 
@@ -183,6 +200,7 @@ akima_interp <- interp(
   xo = seq(from = 0, to = 1, by = .01), 
   yo = seq(from = 0, to = 1, by = .01)
 )
+
 # Map
 image(akima_interp, col = topo.colors(128, alpha = 1), asp = 1)
 # Contour lines
@@ -238,12 +256,12 @@ surf.gls(
 ) %>% 
   # prmat() performs kriging over a grid
   prmat(xl= 0, xu = 1, yl = 0, yu = 1, n = 128) ->
-  spatial_krig
+  spatial_krige
 
 # Map it
-image(spatial_krig, col = topo.colors(128, alpha = 1), asp = 1)
+image(spatial_krige, col = topo.colors(128, alpha = 1), asp = 1)
 # Contour lines
-contour(spatial_krig, add = TRUE)
+contour(spatial_krige, add = TRUE)
 # Add the points
 with(the_df, points(x, y, pch = 20))
 ```
@@ -252,6 +270,9 @@ with(the_df, points(x, y, pch = 20))
 
 Le package **gstat** étend les possibilités de krigeage en permettant de spécifier un modèle de tendance pour la variable cartographiée (inutile ici, on utilise `formula=Richness~1`).
 Le variogramme doit être calculé et un modèle ajusté (dans l'exemple, un modèle gaussien et non exponentiel).
+
+**gstat** peut utiliser des objets spatiaux des packages **sp** et **sf**, qui remplace progressivement **sp**.
+**sp** est utilisé ici, **sf** le sera dans l'exemple utilisant un fond de carte.
 
 ```{r gstat, message = FALSE}
 library("sp")
@@ -271,7 +292,7 @@ gstat::variogram(z ~ 1, data = sp_spdf) %>%
 
 # Build an oject that describes all features of the model.
 # The formula defines the trend
-geoX <- gstat(
+gstat_model <- gstat(
   formula = z ~ 1, 
   locations = sp_spdf, 
   model = gstat_variogram
@@ -281,12 +302,12 @@ xy <- expand.grid((0:128) / 128, (0:128) / 128)
 names(xy) <- c("x", "y")
 gridded(xy) <- ~ x + y
 # Calcul de la valeur de Richness sur les points de la grille (krigeage)
-geoXprd <- predict(geoX, newdata = xy)
+gstat_predict <- predict(gstat_model, newdata = xy)
 
 # Carte
-image(geoXprd, col = topo.colors(128, alpha = 1), asp=1)
+image(gstat_predict, col = topo.colors(128, alpha = 1), asp=1)
 # Contour lines
-contour(spatial_krig, add = TRUE)
+contour(gstat_predict, add = TRUE)
 # Add the points
 with(the_df, points(x, y, pch = 20))
 ```
@@ -306,26 +327,26 @@ the_df %>%
   # Create a ppp in a square window
   as.ppp(W = square(1)) ->
   the_ppp
-# Preparing a 256-square-point grid
+# Prepare a 256-square-point grid
 xy <- gridcentres(the_ppp, 256, 256)
-# Filtering of grid nodes inside the window (not necessary here)
+# Filter the nodes inside the window (not necessary here)
 ok <- inside.owin(xy$x, xy$y, the_ppp)
-# Formatting the grid
+# Format the grid as an sp object
 sp_grid <- SpatialPoints(cbind(xy$x[ok], xy$y[ok]))
 gridded(sp_grid) <- TRUE
-# Kriging the SpatialPointsDataFrame
+# Krige the SpatialPointsDataFrame
 library("automap")
-automap_krig <- autoKrige(
+automap_krige <- autoKrige(
   formula = z ~ 1, 
   input_data = sp_spdf, 
   new_data = sp_grid
 )
 # Result
-plot(automap_krig)
+plot(automap_krige)
 
 # The usual map
-image(automap_krig$krige_output, col = topo.colors(128, alpha = 1), asp = 1)
-contour(automap_krig$krige_output, add=TRUE)
+image(automap_krige$krige_output, col = topo.colors(128, alpha = 1), asp = 1)
+contour(automap_krige$krige_output, add=TRUE)
 with(the_df, points(x, y, pch = 20))
 ```
 
@@ -334,17 +355,27 @@ with(the_df, points(x, y, pch = 20))
 
 L'objectif est ici d'interpoler une variable continue du même type sur les centroïdes de polygones d'une carte vectorielle (un shapefile) plutôt que sur une grille.
 
+Le code utilise les packages **geodata** (plutôt que **raster**) pour obtenir des fonds de carte et **sf** (plutôt que **sp**) pour manipuler les objets géographiques. 
+Le package **gstat** utilisé pour le krigeage repose sur **sp**.
+
 ## Obtention des cartes
 
-Le package _raster_ permet de télécharger des fonds de carte administratifs, des modèles numériques de terrain, des cartes de climat : voir l'aide de la fonction `getData`.
+Le package _geodata_ permet de télécharger des fonds de carte administratifs, des modèles numériques de terrain, des cartes de climat : voir l'aide du package.
 
 ```{r France, message=FALSE}
-library("raster")
+library("geodata")
+library("sf")
+
 # Retrieving the shapefile for the boundaries of France's regions
-France <- raster::getData('GADM', country='FRA', level=3)
-# Projection of France in Lambert 93
-France <- spTransform(France, CRS("+init=epsg:2154"))
-plot(France)
+gadm(country='FRA', level=3, path = "data") %>% 
+  # Convert to sf
+  st_as_sf() %>% 
+  # Projection of France in Lambert 93
+  st_transform(CRS("+init=epsg:2154")) ->
+  France
+
+# Map it
+France %>% st_geometry() %>% plot()
 ```
 
 ## Fabrication des données
@@ -365,19 +396,22 @@ X$y <- 900000 * X$y + 6200000
 
 ## Interpolation
 
-Les valeurs de $x$, $y$ et $z$ doivent être intégrées dans un objet _Spatial_.
+Les valeurs de $x$, $y$ et $z$ doivent être intégrées dans un objet `sf`.
 
 ```{r CartePoints}
-# Make a spatial point dataframe
-SpatialX <- SpatialPointsDataFrame(
-  coords = data.frame(x = X$x, y = X$y),
-  data = data.frame(m = X$marks), 
-  proj4string = CRS("+init=epsg:2154")
-)
-# Trim it
-SpatialX <- SpatialX[France, ]
-# Map the points
-spplot(SpatialX, "m")
+X %>% 
+  # Make an sf object
+  st_as_sf() %>% 
+  # Rename the marks columns
+  rename(marks = spatstat.geom..marks.x.) %>% 
+  # Define the projection as Lambert 93
+  st_set_crs(CRS("+init=epsg:2154")) %>% 
+  # Trim the object
+  st_intersection(France) ->
+  X.sf
+
+# Plot the points
+plot(X.sf["marks"], main = "")
 ```
 
 L'interpolation est faite avec _gstat_.
@@ -385,21 +419,46 @@ L'interpolation est faite avec _gstat_.
 ```{r gstatmap, warning=FALSE}
 library("gstat")
 # Empirical variogram
-gstat::variogram(m ~ 1, data = SpatialX) %>% 
+gstat::variogram(marks ~ 1, data = X.sf) %>% 
   # Fit a Gaussian model
   fit.variogram(vgm("Gau")) ->
   gstat_variogram
 
 # Build an oject that describes all features of the model.
-geoX <- gstat(
-  formula = m ~ 1, 
-  locations = SpatialX, 
+X_geo <- gstat(
+  formula = marks ~ 1, 
+  locations = X.sf, 
   model = gstat_variogram
 )
-# Calculating the value of m on the centroids of polygons
-geoXprd <- predict(geoX, newdata = France)
+# Calculate the value of the marks on the centroids of polygons
+X_prd <- predict(X_geo, newdata = France)
+
 # Final map
-spplot(geoXprd, "var1.pred")
+plot(X_prd["var1.pred"], main = "")
 ```
+
+## Carte
+
+Une vraie carte peut être produite en ajoutant une échelle, une rose des vents, etc. avec le package **ggspatial**.
+
+```{r}
+library("ggspatial")
+
+ggplot(data = X_prd) + 
+  # Variable to map
+  geom_sf(aes(fill=var1.pred)) +
+  # Color gradient
+  scale_fill_gradientn(colours = terrain.colors(8))+
+  # Scale bar
+  annotation_scale() +
+  # North arrow
+  annotation_north_arrow(
+    pad_y = unit(1, "cm"),
+    style = north_arrow_nautical()
+  ) +
+  # Legend title
+  labs(fill = "Marque")
+```
+
 
 `r if (!knitr:::is_latex_output()) '# References {-}'`
