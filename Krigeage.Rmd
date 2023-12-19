@@ -371,7 +371,7 @@ gadm(country='FRA', level=3, path = "data") %>%
   # Convert to sf
   st_as_sf() %>% 
   # Projection of France in Lambert 93
-  st_transform(CRS("+init=epsg:2154")) ->
+  st_transform(2154) ->
   France
 
 # Map it
@@ -405,7 +405,7 @@ X %>%
   # Rename the marks columns
   rename(marks = spatstat.geom..marks.x.) %>% 
   # Define the projection as Lambert 93
-  st_set_crs(CRS("+init=epsg:2154")) %>% 
+  st_set_crs(2154) %>% 
   # Trim the object
   st_intersection(France) ->
   X.sf
@@ -448,7 +448,7 @@ ggplot(data = X_prd) +
   # Variable to map
   geom_sf(aes(fill=var1.pred)) +
   # Color gradient
-  scale_fill_gradientn(colours = terrain.colors(8))+
+  scale_fill_gradientn(colours = terrain.colors(8)) +
   # Scale bar
   annotation_scale() +
   # North arrow
