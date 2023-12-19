@@ -1498,7 +1498,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">Krigeage avec R</h1>
 <h4 class="author">Eric Marcon</h4>
-<h4 class="date">15 décembre 2023</h4>
+<h4 class="date">19 décembre 2023</h4>
 <div class="abstract">
 <p class="abstract">Abstract</p>
 <p>Techniques pour interpoler les valeurs d’une variable continue.</p>
@@ -1785,7 +1785,7 @@ gadm(country=&#39;FRA&#39;, level=3, path = &quot;data&quot;) %&gt;%
   # Convert to sf
   st_as_sf() %&gt;% 
   # Projection of France in Lambert 93
-  st_transform(CRS(&quot;+init=epsg:2154&quot;)) -&gt;
+  st_transform(2154) -&gt;
   France
 
 # Map it
@@ -1819,7 +1819,7 @@ X$y &lt;- 9e+05 * X$y + 6200000</code></pre>
   # Rename the marks columns
   rename(marks = spatstat.geom..marks.x.) %&gt;% 
   # Define the projection as Lambert 93
-  st_set_crs(CRS(&quot;+init=epsg:2154&quot;)) %&gt;% 
+  st_set_crs(2154) %&gt;% 
   # Trim the object
   st_intersection(France) -&gt;
   X.sf
@@ -1861,7 +1861,7 @@ ggplot(data = X_prd) +
   # Variable to map
   geom_sf(aes(fill=var1.pred)) +
   # Color gradient
-  scale_fill_gradientn(colours = terrain.colors(8))+
+  scale_fill_gradientn(colours = terrain.colors(8)) +
   # Scale bar
   annotation_scale() +
   # North arrow
