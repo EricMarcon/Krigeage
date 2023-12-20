@@ -14,6 +14,8 @@ output:
   bookdown::html_document2:
     toc: yes
     toc_float: yes
+    pandoc_args:
+      - --lua-filter=fr-nbsp.lua
   bookdown::pdf_book:
     template: latex/template.tex
     citation_package: natbib
