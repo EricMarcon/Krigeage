@@ -1,21 +1,20 @@
 ---
 title: "Krigeage avec R"
 author:
-  - name: Eric Marcon
-abstract: >
-  Techniques pour interpoler les valeurs d'une variable continue.
+- name: Eric Marcon
 date: "`r format(Sys.time(), '%d %B %Y')`"
-lang: fr-FR
+abstract: |
+  Techniques pour interpoler les valeurs d'une variable continue.
+lang: "fr-FR"
 bibliography: references.bib
 biblio-style: chicago
 pdftoc: yes
 always_allow_html: yes
 output:
-  bookdown::html_document2:
-    toc: yes
-    toc_float: yes
-    pandoc_args:
-      - --lua-filter=fr-nbsp.lua
+  rmdformats::downcute:
+    use_bookdown: yes
+    lightbox: yes
+    pandoc_args: "--lua-filter=fr-nbsp.lua"
   bookdown::pdf_book:
     template: latex/template.tex
     citation_package: natbib
