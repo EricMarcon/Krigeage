@@ -23,7 +23,9 @@ output:
     keep_tex: yes
 ---
 
-```{r DoNotModify, include=FALSE}
+```{r}
+#| label: DoNotModify
+#| include: false
 ### Utilities. Do not modify.
 # Installation of packages if necessary
 InstallPackages <- function(Packages) {
@@ -47,7 +49,9 @@ knitr::knit_hooks$set(chunk = function(x, options) {
 })
 ```
 
-```{r Options, include=FALSE}
+```{r}
+#| label: Options
+#| include: false
 ### Customized options for this document
 # Add necessary packages here
 Packages <- c(
@@ -109,7 +113,9 @@ Un jeu de deux types de points est généré dans une fenêtre carrée.
 Les cas sont générés par un processus de Matérn [@Matern1960] avec $\kappa$ agrégats (attendus) de $\mu$ points (attendus) dans un cercle de rayon *scale*.
 Les contrôles suivent un processus de Poisson dont la densité $\lambda$ décroit exponentiellement vers le haut de la carte.
 
-```{r, message=FALSE}
+```{r}
+#| label: data
+#| message: false
 library("tidyverse")
 library("dbmss")
 # Simulation of cases (clusters)
@@ -139,6 +145,7 @@ Si elle est supérieure à 1, on observe plus de voisins qu'attendu.
 La valeur est calculée en chaque point et stockée dans un objet de type `fv` dont les valeurs sont récupérées pour produire un dataframe.
 
 ```{r}
+#| label: M
 # Choose the distance to plot
 Distance <- 0.1
 
@@ -166,6 +173,7 @@ Seuls les cas sont conservés: les contrôles n'ont servi qu'à calculer la conc
 Ce format de données est aussi générique que possible.
 
 ```{r}
+#| label: df
 head(the_df)
 ```
 
@@ -173,6 +181,7 @@ L'objectif est maintenant de cartographier la  valeur $z$.
 La cartographie des points est très simple avec **sf**.
 
 ```{r}
+#| label: points
 library("sf")
 the_df %>% 
   st_as_sf(coords = c("x", "y")) %>% 
@@ -189,7 +198,8 @@ La sections suivante présente les méthodes nécessaire à la cartographie de l
 La méthode d'Akima est une interpolation entre les valeurs des points, faite dans chaque triangle constitué par les triplets de points les plus proches.
 La valeur des points est conservée.
 
-```{r Akima}
+```{r}
+#| label: Akima
 library("akima")
 # interp() function
 akima_interp <- interp(
@@ -219,7 +229,8 @@ La fonction `Smooth.ppp()` du package **spatstat** permet d'obtenir le même ré
 
 Elle s'applique à un objet de type `ppp` (*planar point pattern*) à créer.
 
-```{r, message=FALSE}
+```{r}
+#| message: false
 library("spatstat")
 the_df %>% 
   # Create a ppp in a square window
@@ -245,7 +256,8 @@ La règle de Scott, implémentée dans `bw.scott()` est généralement efficace.
 Le package **spatial** permet de kriger au lieu de simplement interpoler, mais renvoie des erreurs si la méthode de calcul de la covariance n'est pas exponentielle.
 L'ordre du polynôme du modèle et la distance de dépendance doivent être choisis explicitement.
 
-```{r spatial}
+```{r}
+#| label: spatial
 library("spatial")
 # Function surf.gls() creates a trend surface object
 surf.gls(
@@ -276,7 +288,9 @@ Le variogramme doit être calculé et un modèle ajusté (dans l'exemple, un mod
 **gstat** peut utiliser des objets spatiaux des packages **sp** et **sf**, qui remplace progressivement **sp**.
 **sp** est utilisé ici, **sf** le sera dans l'exemple utilisant un fond de carte.
 
-```{r gstat, message = FALSE}
+```{r}
+#| label: gstat
+#| message: false
 library("sp")
 # Create a SpatialPointsDataFrame with the data
 sp_spdf <- SpatialPointsDataFrame(
@@ -322,7 +336,8 @@ Le modèle sélectionné est affiché dans le variogramme.
 La grille précédente peut être utilisée, mais une grille calculée à partir de la fenêtre de l'objet ``ppp` (librairie **spatstat**) est plutôt utilisée ici.
 
 
-```{r automap}
+```{r}
+#| label: automap
 library("spatstat")
 # Build a ppp object
 the_df %>% 
@@ -364,7 +379,9 @@ Le package **gstat** utilisé pour le krigeage repose sur **sp**.
 
 Le package _geodata_ permet de télécharger des fonds de carte administratifs, des modèles numériques de terrain, des cartes de climat : voir l'aide du package.
 
-```{r France, message=FALSE}
+```{r}
+#| label: France
+#| message: false
 library("geodata")
 library("sf")
 
@@ -385,7 +402,9 @@ France %>% st_geometry() %>% plot()
 Les données sont 100 points placés aléatoirement dans un rectangle contenant la France.
 Leur marque est une valeur numérique continue, augmentant linéairement de l'ouest vers l'est et avec la distance à la latitude moyenne, et contenant un bruit gaussien.
 
-```{r spatstat, message=FALSE, tidy=TRUE}
+```{r}
+#| label: spatstat
+#| message: false
 library("spatstat")
 # Draw in a Poisson process, 1000 expected points, in a 1x1 window
 plot(X <- rpoispp(100), main = "")
@@ -400,7 +419,8 @@ X$y <- 900000 * X$y + 6200000
 
 Les valeurs de $x$, $y$ et $z$ doivent être intégrées dans un objet `sf`.
 
-```{r CartePoints}
+```{r}
+#| label: CartePoints
 X %>% 
   # Make an sf object
   st_as_sf() %>% 
@@ -418,7 +438,9 @@ plot(X.sf["marks"], main = "")
 
 L'interpolation est faite avec _gstat_.
 
-```{r gstatmap, warning=FALSE}
+```{r}
+#| label: gstatmap
+#| warning: false
 library("gstat")
 # Empirical variogram
 gstat::variogram(marks ~ 1, data = X.sf) %>% 
@@ -444,6 +466,7 @@ plot(X_prd["var1.pred"], main = "")
 Une vraie carte peut être produite en ajoutant une échelle, une rose des vents, etc. avec le package **ggspatial**.
 
 ```{r}
+#| label: ggspatial
 library("ggspatial")
 
 ggplot(data = X_prd) + 
