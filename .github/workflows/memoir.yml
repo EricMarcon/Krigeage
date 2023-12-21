@@ -35,7 +35,7 @@ jobs:
         run: |
           echo 'theme: jekyll-theme-slate' > docs/_config.yml
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ghpages
           path: docs
@@ -44,7 +44,7 @@ jobs:
     needs: render
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ghpages
           path: docs
